@@ -133,8 +133,8 @@ var renderer = {
   },
 
   initVAO: function(gl) {
-    var flake = new Flake(7);
-    var vertexData = flake.getVertices(5, 1.0, [0,0]);
+    var flake = new Flake(6);
+    var vertexData = flake.getVertices(3, 1.0, [0,0]);
 
     var vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
@@ -160,8 +160,8 @@ var renderer = {
     gl.clearColor(56/255, 63/255, 112/255, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.bindVertexArray(vao);
-    gl.drawElements(gl.POINTS, this.numElements, gl.UNSIGNED_INT, 0);
-    //gl.drawElements(gl.TRIANGLES, this.numElements, gl.UNSIGNED_INT, 0);
+    //gl.drawElements(gl.POINTS, this.numElements, gl.UNSIGNED_INT, 0);
+    gl.drawElements(gl.TRIANGLES, this.numElements, gl.UNSIGNED_INT, 0);
   },
 
   main: function() {
