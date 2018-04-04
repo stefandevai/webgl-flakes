@@ -1,9 +1,10 @@
-html,body {
+body {
   padding: 0;
   margin: 0;
 }
 
 canvas {
+  float: left;
   width: 100vw;
   height: 100vh;
 }

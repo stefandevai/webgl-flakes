@@ -148,7 +148,7 @@ var renderer = {
 
     var ebo = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int32Array(vertexData[1]), gl.STATIC_DRAW);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int16Array(vertexData[1]), gl.STATIC_DRAW);
     this.numElements = vertexData[1].length;
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -161,7 +161,7 @@ var renderer = {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.bindVertexArray(vao);
     //gl.drawElements(gl.POINTS, this.numElements, gl.UNSIGNED_INT, 0);
-    gl.drawElements(gl.TRIANGLES, this.numElements, gl.UNSIGNED_INT, 0);
+    gl.drawElements(gl.TRIANGLES, this.numElements, gl.UNSIGNED_SHORT, 0);
   },
 
   main: function() {
