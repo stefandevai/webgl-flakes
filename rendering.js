@@ -176,7 +176,8 @@ var renderer = {
     gl.useProgram(shaderProgram);
 
     var model = mat4.create();
-    mat4.scale(model, model, vec3.fromValues(gl.canvas.width/2 - 10, gl.canvas.height/2 - 10, 1));
+    mat4.scale(model, model, vec3.fromValues(Math.min(gl.canvas.width, gl.canvas.height)/2 - 30, Math.min(canvas.width, canvas.height)/2 - 30, 1));
+    console.log(Math.max(gl.canvas.width, gl.canvas.height));
     var view = mat4.create();
     mat4.translate(view, view, vec3.fromValues(canvas.width/2, canvas.height/2, 0));
     mat4.rotate(view, view, 90*Math.PI/180, vec3.fromValues(0, 0, 1));
