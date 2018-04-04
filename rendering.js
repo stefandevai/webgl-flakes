@@ -44,10 +44,8 @@ var renderer = {
       vertices.push(coordx, coordy);
       vertices.push(0);
     }
-    //console.log(indices);
 
     var indices = [];
-    //indiceStride = 0;
     for (var i = 1; i < numVertices; ++i) {
       indices.push(indiceStride, indiceStride + i, indiceStride + i + 1);
     }
@@ -65,8 +63,6 @@ var renderer = {
     }
     else {
       var hexaflakeData = this.getHexaflakeVertices(steps-1, radius*0.3333333333, center, stride);
-        //console.log(hexaflakeData[0].length/3);
-      //console.log(hexaflakeData[1].length);
       for (var i = 0; i < 6; i++) {
         var cx = center[0] + radius*Math.cos((60 * i + 90)*Math.PI/180.0)*(1 - 0.33333333);
         var cy = center[1] + radius*Math.sin((60 * i - 90)*Math.PI/180.0)*(1 - 0.33333333);
@@ -74,7 +70,6 @@ var renderer = {
         hexaflakeData[0] = hexaflakeData[0].concat(auxData[0]);
         hexaflakeData[1] = hexaflakeData[1].concat(auxData[1]);
       }
-      //console.log(hexaflakeData[1].length/18);
       return hexaflakeData;
     }
 
@@ -119,9 +114,7 @@ var renderer = {
   },
 
   initVAO: function(gl) {
-    //var vertexData = this.getPolygonVertices(6, 1.0, [0,0]);
     var vertexData = this.getHexaflakeVertices(3, 1.0, [0,0]);
-    //console.log(vertexData);
 
     var vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
@@ -137,9 +130,6 @@ var renderer = {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int32Array(vertexData[1]), gl.STATIC_DRAW);
     this.numElements = vertexData[1].length;
-    //this.numElements = vertexData[1].length/4 + 23;
-    //console.log(vertexData[1].length/4 + 23);
-    //console.log(vertexData[1][55]);
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
@@ -150,7 +140,7 @@ var renderer = {
     gl.clearColor(56/255, 63/255, 112/255, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.bindVertexArray(vao);
-    //gl.drawElements(gl.LINE_LOOP, this.numElements, gl.UNSIGNED_INT, 0);
+    //gl.drawElements(gl.LINES, this.numElements, gl.UNSIGNED_INT, 0);
     gl.drawElements(gl.TRIANGLES, this.numElements, gl.UNSIGNED_INT, 0);
   },
 
@@ -166,7 +156,7 @@ var renderer = {
     gl.useProgram(shaderProgram);
 
     var model = mat4.create();
-    mat4.scale(model, model, vec3.fromValues(200, 200, 1));
+    mat4.scale(model, model, vec3.fromValues(gl.canvas.width/2 - 10, gl.canvas.height/2 - 10, 1));
     var view = mat4.create();
     mat4.translate(view, view, vec3.fromValues(canvas.width/2, canvas.height/2, 0));
     var projection = mat4.create();
