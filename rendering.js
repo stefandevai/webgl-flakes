@@ -1,5 +1,65 @@
 "use strict";
 
+var Flake = (function() {
+  var getPolygonVertices = function(numVertices, radius, center, indiceStride) {
+    var alpha = 360.0/numVertices;
+
+    var vertices = [center[0], center[1], 0];
+    for (var i = 0; i < numVertices; i++) {
+      var coordx = center[0] + radius*Math.cos((alpha*i)*Math.PI/180.0);
+      var coordy = center[1] + radius*Math.sin((alpha*i)*Math.PI/180.0);
+      vertices.push(coordx, coordy);
+      vertices.push(0);
+    }
+
+    var indices = [];
+    for (var i = 1; i < numVertices; ++i) {
+      indices.push(indiceStride, indiceStride + i, indiceStride + i + 1);
+    }
+    indices.push(indiceStride, indiceStride + 1, indiceStride +  numVertices);
+
+    return [vertices, indices];
+  };
+
+  var getScaleFactor = function(num_vertices) {
+    var aux = 0;
+    for (var i = 0; i < Math.floor(num_vertices/4); ++i) {
+      aux += Math.cos(2*Math.PI*(i+1) / num_vertices);
+    }
+    return 1 / (2*(1 + aux));
+  };
+
+  var cls = function(num_vertices) {
+    this.numVertices = num_vertices;
+    this.scaleFactor = getScaleFactor(num_vertices);
+    this.alpha = 360/num_vertices;
+  };
+
+  cls.prototype = {
+    getVertices: function(steps, radius, center, stride = 0) {
+      if (steps == 0) {
+        return;
+      }
+      else if (steps == 1) {
+        return getPolygonVertices(this.numVertices, radius, center, stride);
+      }
+      else {
+        var data = this.getVertices(steps-1, radius*this.scaleFactor, center, stride);
+        for (var i = 0; i < this.numVertices; i++) {
+          var cx = center[0] + radius*Math.cos((this.alpha * i)*Math.PI/180.0)*(1 - this.scaleFactor);
+          var cy = center[1] + radius*Math.sin((this.alpha * i)*Math.PI/180.0)*(1 - this.scaleFactor);
+          var auxData = this.getVertices(steps-1, radius*this.scaleFactor, [cx, cy], data[0].length/3 + stride);
+          data[0] = data[0].concat(auxData[0]);
+          data[1] = data[1].concat(auxData[1]);
+        }
+        return data;
+      }
+    }
+  }
+
+  return cls;
+})();
+
 var renderer = {
   vertexSource: `#version 300 es
   in vec3 ipos;
@@ -33,47 +93,6 @@ var renderer = {
 
   },
 
-  getPolygonVertices: function(numVertices, radius, center, indiceStride) {
-    var alpha = 360.0/numVertices;
-    var rotation = 90;
-
-    var vertices = [center[0], center[1], 0];
-    for (var i = 0; i < numVertices; i++) {
-      var coordx = center[0] + radius*Math.cos((alpha*i + rotation)*Math.PI/180.0);
-      var coordy = center[1] + radius*Math.sin((alpha*i + rotation)*Math.PI/180.0);
-      vertices.push(coordx, coordy);
-      vertices.push(0);
-    }
-
-    var indices = [];
-    for (var i = 1; i < numVertices; ++i) {
-      indices.push(indiceStride, indiceStride + i, indiceStride + i + 1);
-    }
-    indices.push(indiceStride, indiceStride + 1, indiceStride +  numVertices);
-
-    return [vertices, indices];
-  },
-
-  getHexaflakeVertices: function(steps, radius, center, stride = 0) {
-    if (steps == 0) {
-      return;
-    }
-    else if (steps == 1) {
-      return this.getPolygonVertices(6, radius, center, stride);
-    }
-    else {
-      var hexaflakeData = this.getHexaflakeVertices(steps-1, radius*0.3333333333, center, stride);
-      for (var i = 0; i < 6; i++) {
-        var cx = center[0] + radius*Math.cos((60 * i + 90)*Math.PI/180.0)*(1 - 0.33333333);
-        var cy = center[1] + radius*Math.sin((60 * i - 90)*Math.PI/180.0)*(1 - 0.33333333);
-        var auxData = this.getHexaflakeVertices(steps-1, radius*0.3333333333, [cx, cy], hexaflakeData[0].length/3 + stride);
-        hexaflakeData[0] = hexaflakeData[0].concat(auxData[0]);
-        hexaflakeData[1] = hexaflakeData[1].concat(auxData[1]);
-      }
-      return hexaflakeData;
-    }
-
-  },
 
   createShaderProgram: function(gl, vert_source, frag_source) {
     var vertShader = gl.createShader(gl.VERTEX_SHADER);
@@ -114,7 +133,8 @@ var renderer = {
   },
 
   initVAO: function(gl) {
-    var vertexData = this.getHexaflakeVertices(3, 1.0, [0,0]);
+    var flake = new Flake(7);
+    var vertexData = flake.getVertices(5, 1.0, [0,0]);
 
     var vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
@@ -140,8 +160,8 @@ var renderer = {
     gl.clearColor(56/255, 63/255, 112/255, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.bindVertexArray(vao);
-    //gl.drawElements(gl.LINES, this.numElements, gl.UNSIGNED_INT, 0);
-    gl.drawElements(gl.TRIANGLES, this.numElements, gl.UNSIGNED_INT, 0);
+    gl.drawElements(gl.POINTS, this.numElements, gl.UNSIGNED_INT, 0);
+    //gl.drawElements(gl.TRIANGLES, this.numElements, gl.UNSIGNED_INT, 0);
   },
 
   main: function() {
@@ -159,6 +179,7 @@ var renderer = {
     mat4.scale(model, model, vec3.fromValues(gl.canvas.width/2 - 10, gl.canvas.height/2 - 10, 1));
     var view = mat4.create();
     mat4.translate(view, view, vec3.fromValues(canvas.width/2, canvas.height/2, 0));
+    mat4.rotate(view, view, 90*Math.PI/180, vec3.fromValues(0, 0, 1));
     var projection = mat4.create();
     mat4.ortho(projection, 0, canvas.width, canvas.height, 0, -1, 1);
 
